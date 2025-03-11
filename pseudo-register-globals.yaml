@@ -1,0 +1,46 @@
+id: pseudo-register-globals
+
+info:
+  name: PHP Pseudo Register Globals Detection
+  author: Kaimi
+  severity: low
+  description: |
+    Detects potential pseudo register globals behavior by checking for 500 errors
+    when accessing URLs with specific parameters. May indicate insecure use of
+    extract() or parse_str() with user input.
+  reference:
+    - https://github.com/kaimi-/kaimi-nuclei-templates
+    - https://antichat.com/threads/474727/
+  tags: php,register-globals
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/?this=abc"
+
+    matchers:
+      - type: status
+        status:
+          - 500
+
+      - type: word
+        words:
+          - "Internal Server Error"
+        part: body
+        condition: or
+
+      - type: regex
+        regex:
+          - '(HTTP/[0-9.]+ 500)'
+        part: header
+
+    extractors:
+      - type: regex
+        name: error-url
+        regex:
+          - '(GET .+? HTTP)'
+        part: header
+        group: 1
+
+    matchers-condition: or
+    max-redirects: 2
