@@ -3,12 +3,11 @@ id: laravel-env-file-exposure
 info:
   name: Laravel .env File Exposure
   author: Kaimi
-  reference:
-    - https://github.com/kaimi-/kaimi-nuclei-templates
   severity: high
   description: |
     Detects if the Laravel .env file is accessible, potentially exposing sensitive configuration details.
   reference:
+    - https://github.com/kaimi-/kaimi-nuclei-templates
     - https://laravel.com/docs/configuration#environment-configuration
   tags: laravel,env,exposure
 
