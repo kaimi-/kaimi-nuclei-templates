@@ -1,0 +1,121 @@
+id: adminer-load-data-local-infile
+
+info:
+  name: Adminer LOAD DATA LOCAL INFILE Vulnerability
+  author: Kaimi
+  severity: high
+  description: |
+    Detects Adminer versions < 4.6.3 vulnerable to LOAD DATA LOCAL INFILE attack.
+    These versions allow arbitrary file read through database connections.
+  reference:
+    - https://github.com/kaimi-/kaimi-nuclei-templates
+    - https://www.adminer.org/security/#load-data-local-infile
+  tags: adminer,rce,exposure
+
+http:
+  # Check paths without versions
+  - method: GET
+    path:
+      - "{{BaseURL}}/adminer.php"
+      - "{{BaseURL}}/adminer-en.php"
+      - "{{BaseURL}}/adminer-mysql-en.php"
+      - "{{BaseURL}}/adminer-mysql.php"
+      - "{{BaseURL}}/editor.php"
+      - "{{BaseURL}}/editor-en.php"
+      - "{{BaseURL}}/editor-mysql-en.php"
+      - "{{BaseURL}}/editor-mysql.php"
+
+    matchers:
+      - type: regex
+        regex:
+          - '<span class="version">([\d.]+)</span>'
+        part: body
+
+    extractors:
+      - type: regex
+        regex:
+          - '<span class="version">([\d.]+)</span>'
+        group: 1
+
+  # Check paths with versions
+  - method: GET
+    path:
+      - "{{BaseURL}}/adminer-{{version}}-en.php"
+      - "{{BaseURL}}/adminer-{{version}}.php"
+      - "{{BaseURL}}/adminer-{{version}}-mysql-en.php"
+      - "{{BaseURL}}/adminer-{{version}}-mysql.php"
+      - "{{BaseURL}}/adminer-{{version}}/"
+      - "{{BaseURL}}/editor-{{version}}-en.php"
+      - "{{BaseURL}}/editor-{{version}}.php"
+      - "{{BaseURL}}/editor-{{version}}-mysql-en.php"
+      - "{{BaseURL}}/editor-{{version}}-mysql.php"
+      - "{{BaseURL}}/editor-{{version}}/"
+    
+    payloads:
+      version:
+        - "4.6.2"
+        - "4.6.1"
+        - "4.6.0"
+        - "4.5.0"
+        - "4.4.0"
+        - "4.3.1"
+        - "4.3.0"
+        - "4.2.5"
+        - "4.2.4"
+        - "4.2.3"
+        - "4.2.2"
+        - "4.2.1"
+        - "4.2.0"
+        - "4.1.0"
+        - "4.0.3"
+        - "4.0.2"
+        - "4.0.1"
+        - "4.0.0"
+        - "3.7.1"
+        - "3.7.0"
+        - "3.6.4"
+        - "3.6.3"
+        - "3.6.2"
+        - "3.6.1"
+        - "3.6.0"
+        - "3.5.1"
+        - "3.5.0"
+        - "3.4.0"
+        - "3.3.4"
+        - "3.3.3"
+        - "3.3.1"
+        - "3.3.0"
+        - "3.2.2"
+        - "3.2.1"
+        - "3.2.0"
+        - "3.1.0"
+        - "3.0.1"
+        - "3.0.0"
+
+    matchers:
+      # Case 1: Version number directly inside <span class="version">
+      - type: dsl
+        dsl:
+          - 'contains(body, "<span class=\"version\">")'
+          - compare_versions(version, '< 4.6.3')
+        condition: and
+
+      # Case 2: Version number inside <span class="version"> followed by HTML tags
+      - type: dsl
+        dsl:
+          - 'contains(body, "<span class=\"version\">")'
+          - compare_versions(version, '< 4.6.3')
+        condition: and
+
+    extractors:
+      # Extract version for Case 1
+      - type: regex
+        regex:
+          - '<span class="version">\s*([\d.]+)\s*</span>'
+        group: 1
+
+      # Extract version for Case 2
+      - type: regex
+        regex:
+          - '<span class="version">\s*([\d.]+)\s*(?:<[^>]+>)*\s*</span>'
+        group: 1
