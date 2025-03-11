@@ -1,0 +1,24 @@
+id: laravel-debug-mode-exposure
+
+info:
+  name: Laravel Debug Mode Exposure
+  author: Kaimi
+  severity: medium
+  description: |
+    Detects if the Laravel application has debug mode enabled, which can expose sensitive information.
+  reference:
+    - https://laravel.com/docs/errors#configuration
+  tags: laravel,debug,exposure
+
+http:
+  - method: POST
+    path:
+      - "{{BaseURL}}/"
+
+    matchers:
+      - type: regex
+        regex:
+          - '(?i)laravel/framework/src'
+          - '(?i)exception'
+        condition: and
+        part: body
